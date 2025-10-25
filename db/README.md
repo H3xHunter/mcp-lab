@@ -401,14 +401,3 @@ docker system df
 ```bash
 docker stats mcp-postgres
 ```
-
-## Support
-
-For issues with:
-- **Docker:** Check Docker Desktop documentation
-- **PostgreSQL:** Check PostgreSQL 15 documentation
-- **MCP Servers:** See respective README.md in mcp-ventas-node and mcp-pedidos-py
-
-## License
-
-MIT

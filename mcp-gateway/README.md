@@ -95,10 +95,3 @@ Test with MCP Inspector:
 npx @modelcontextprotocol/inspector npm run dev
 ```
 
-## Troubleshooting
-
-See full documentation for detailed troubleshooting steps.
-
-## License
-
-MIT

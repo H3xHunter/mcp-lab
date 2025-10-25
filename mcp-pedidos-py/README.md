@@ -174,11 +174,3 @@ Add to Claude Desktop config (Windows: %APPDATA%\Claude\claude_desktop_config.js
   }
 }
 ```
-
-## Troubleshooting
-
-See full troubleshooting guide in the documentation.
-
-## License
-
-MIT
