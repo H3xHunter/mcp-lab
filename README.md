@@ -154,14 +154,6 @@ mcp-lab/
 
 Cada componente tiene su propio README con documentación detallada.
 
-## 📊 Criterios de Evaluación
-
-- **Funcionamiento (45%)**: Gateway conectado + herramientas visibles + llamadas correctas
-- **Diseño/Arquitectura (25%)**: Enrutamiento por prefijo + manejo de errores + logs limpios
-- **Código/Calidad (20%)**: README reproducible + organización + comentarios
-- **Datos/Testing (10%)**: Scripts SQL consistentes + evidencias
-- **Extras (5%)**: Cache, métricas, rate-limiting
-
 ## 🐛 Troubleshooting Común
 
 **"Gateway disconnected":**
@@ -193,13 +185,3 @@ Cada componente tiene su propio README con documentación detallada.
 - [Servidor Ventas](mcp-ventas-node/README.md) - Implementación Node.js, herramientas, configuración
 - [Servidor Pedidos](mcp-pedidos-py/README.md) - Implementación Python, herramientas, configuración
 - [Gateway](mcp-gateway/README.md) - Arquitectura, enrutamiento, integración con Claude
-
-## 🔗 Referencias
-
-- [MCP Documentation](https://modelcontextprotocol.io)
-- [MCP SDK](https://github.com/modelcontextprotocol/sdk)
-- [Claude Desktop](https://claude.ai/download)
-
----
-
-**Nota**: Proyecto educativo para laboratorio "Multi-MCP con Gateway" (15% de la materia).
