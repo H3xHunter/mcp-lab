@@ -1,16 +1,21 @@
 # Multi-MCP Gateway System
 
-**Laboratorio: "Multi-MCP con Gateway" (15% de la materia)**
+## Project Overview
 
-## 📋 Descripción
+Laboratory project implementing a microservices architecture with a gateway that routes requests to two specialized backend services via the Model Context Protocol (MCP).
 
-Sistema de gateway MCP que enruta solicitudes a dos servidores backend especializados:
-- **Ventas** (Node.js/TypeScript): Gestión de datos de ventas
-- **Pedidos** (Python): Gestión de pedidos
+**Services:**
 
-El gateway expone un catálogo unificado de herramientas a Claude Desktop y enruta por prefijo.
+| Service | Technology | Port | Database |
+|---------|-----------|------|----------|
+| Database | PostgreSQL 15 (Docker) | 5432 | mcp_lab |
+| Ventas | Node.js/TypeScript | - | PostgreSQL |
+| Pedidos | Python 3.11+ | - | PostgreSQL |
+| Gateway | Node.js/TypeScript | - | N/A |
 
-## 🏗️ Arquitectura
+The gateway exposes a unified catalog of tools to Claude Desktop and routes requests by prefix.
+
+## Architecture Diagram
 
 ```
 Claude Desktop (stdio)
@@ -22,80 +27,144 @@ Claude Desktop (stdio)
     PostgreSQL
 ```
 
-**Enrutamiento por prefijo:**
-- `ventas_*` → Servidor Ventas (Node.js)
-- `pedidos_*` → Servidor Pedidos (Python)
+**Routing by prefix:**
+- `ventas_*` → Ventas Service (Node.js)
+- `pedidos_*` → Pedidos Service (Python)
 
-## 🎯 Herramientas Disponibles
+## Technology Stack
 
-**Ventas:**
-- `ventas_total_mes_anterior` - Total de ventas del mes anterior
-- `ventas_por_dia` - Serie diaria de ventas (últimos N días, default 30)
+- **Node.js** 18+ (TypeScript)
+- **Python** 3.11+
+- **PostgreSQL** 15 (Docker)
+- **Model Context Protocol** (MCP SDK)
+- **Docker & Docker Compose**
 
-**Pedidos:**
-- `pedidos_estado_por_id` - Consultar estado de pedido por ID
-- `pedidos_crear` - Crear nuevo pedido
+## Prerequisites
 
-## 🚀 Quick Start
+- **Java 21** (for some tools, if needed)
+- **Maven** (if applicable)
+- **Docker & Docker Compose**
+- **Git**
+- **Node.js** 18+
+- **Python** 3.11+
+- **Claude Desktop** application
 
-### 1. Prerequisitos
+## Setup Instructions
 
-- Node.js 18+
-- Python 3.11+
-- Docker & Docker Compose
-- Claude Desktop
+Follow these steps in order to set up the entire system.
 
-### 2. Base de Datos
+### 1. Clone the Repository
 
 ```bash
+git clone <repository-url>
+cd mcp-lab
+```
+
+### 2. Database Setup
+
+Start PostgreSQL using Docker Compose and load the schema and seed data:
+
+```bash
+# Navigate to database directory
 cd db
+
+# Start PostgreSQL container
 docker-compose up -d
+
+# Wait a few seconds for PostgreSQL to initialize, then load schema
 docker exec -i mcp-postgres psql -U postgres -d mcp_lab < schema.sql
+
+# Load seed data
 docker exec -i mcp-postgres psql -U postgres -d mcp_lab < seed_data.sql
+
+# Verify database is running
+docker-compose ps
+
+# Return to project root
+cd ..
 ```
 
-Ver [db/README.md](db/README.md) para más detalles.
-
-### 3. Servidores Backend
-
-**Ventas (Node.js):**
+**Verify data loaded:**
 ```bash
+docker exec -it mcp-postgres psql -U postgres -d mcp_lab -c "SELECT COUNT(*) FROM ventas;"
+docker exec -it mcp-postgres psql -U postgres -d mcp_lab -c "SELECT COUNT(*) FROM pedidos;"
+```
+
+### 3. Ventas Service Setup (Node.js)
+
+```bash
+# Navigate to ventas service
 cd mcp-ventas-node
+
+# Install dependencies
 npm install
-cp .env.example .env  # Editar credenciales DB
+
+# Configure environment
+cp .env.example .env
+# Edit .env with database credentials (default values should work)
+
+# Build TypeScript
 npm run build
+
+# Return to project root
+cd ..
 ```
 
-Ver [mcp-ventas-node/README.md](mcp-ventas-node/README.md) para más detalles.
+### 4. Pedidos Service Setup (Python)
 
-**Pedidos (Python):**
 ```bash
+# Navigate to pedidos service
 cd mcp-pedidos-py
+
+# Create virtual environment (Windows note: use --copies flag)
 python -m venv venv --copies
-source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Activate virtual environment
+# Windows:
+venv\Scripts\activate
+# Linux/macOS:
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
-cp .env.example .env  # Editar credenciales DB
+
+# Configure environment
+cp .env.example .env
+# Edit .env with database credentials (default values should work)
+
+# Return to project root (deactivate venv if desired)
+cd ..
 ```
 
-Ver [mcp-pedidos-py/README.md](mcp-pedidos-py/README.md) para más detalles.
-
-### 4. Gateway
+### 5. Gateway Setup
 
 ```bash
+# Navigate to gateway
 cd mcp-gateway
+
+# Install dependencies
 npm install
-cp .env.example .env  # Configurar rutas a backends
+
+# Configure environment
+cp .env.example .env
+# Edit .env to set absolute paths to backend services
+
+# Build TypeScript
 npm run build
+
+# Return to project root
+cd ..
 ```
 
-Ver [mcp-gateway/README.md](mcp-gateway/README.md) para arquitectura detallada.
+### 6. Configure Claude Desktop
 
-### 5. Configurar Claude Desktop
+Edit Claude Desktop configuration file:
 
-Editar configuración de Claude Desktop:
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Linux:** `~/.config/Claude/claude_desktop_config.json`
+
+Add the gateway configuration:
 
 ```json
 {
@@ -110,25 +179,288 @@ Editar configuración de Claude Desktop:
 }
 ```
 
-**⚠️ Importante**: Usar rutas absolutas, no relativas.
+**IMPORTANT:** Use absolute paths, not relative paths. Adjust the path to match your system.
 
-### 6. Verificar
+### 7. Start Services
 
-1. Reiniciar Claude Desktop completamente
-2. Ir a Settings → Developer → Local MCP Servers
-3. Verificar que "mcp-gateway" aparece como "connected"
-4. Probar herramientas en el chat
+Start services in the correct order:
 
-## 🧪 Pruebas
+1. **Database is already running** (from step 2)
+2. **Backend services** are spawned automatically by the gateway
+3. **Gateway** is started automatically when Claude Desktop connects
 
-Ejemplos de prompts para probar en Claude Desktop:
+### 8. Verify Everything is Running
 
-- "¿Cuál fue el total de ventas del mes anterior?"
-- "Muéstrame las ventas de los últimos 7 días"
-- "Consulta el estado del pedido 5"
-- "Crea un pedido para Juan Pérez por 500000 pesos"
+1. Restart Claude Desktop completely (quit and reopen)
+2. Go to **Settings → Developer → Local MCP Servers**
+3. Verify that **"mcp-gateway"** appears with status **"connected"**
+4. In a new chat, test the tools:
+   - "What was the total sales from last month?"
+   - "Show me sales for the last 7 days"
+   - "Check the status of order 5"
+   - "Create an order for Juan Perez with amount 500000"
 
-## 📁 Estructura del Proyecto
+If any tools fail, check the Troubleshooting section below.
+
+## API Endpoints
+
+### Gateway Routing Configuration
+
+The gateway uses prefix-based routing:
+
+| Prefix | Backend Service | Transport |
+|--------|----------------|-----------|
+| `ventas_*` | mcp-ventas-node | stdio (subprocess) |
+| `pedidos_*` | mcp-pedidos-py | stdio (subprocess) |
+
+### Ventas Service Endpoints
+
+**Tool: `ventas_total_mes_anterior`**
+
+Calculates total sales for the previous month.
+
+- **Parameters:** None
+- **Returns:**
+  ```json
+  {
+    "mes": "2025-09",
+    "total": 150000.50
+  }
+  ```
+
+**Tool: `ventas_por_dia`**
+
+Gets daily sales series for the last N days.
+
+- **Parameters:**
+  - `n` (number, optional): Days to look back (default: 30, max: 365)
+- **Returns:**
+  ```json
+  [
+    { "fecha": "2025-10-01", "total": 5000.00 },
+    { "fecha": "2025-10-02", "total": 7500.50 }
+  ]
+  ```
+
+### Pedidos Service Endpoints
+
+**Tool: `pedidos_estado_por_id`**
+
+Query order status and details by ID.
+
+- **Parameters:**
+  - `id` (integer, required): Order ID to query
+- **Returns:**
+  ```json
+  {
+    "id": 1,
+    "cliente": "Juan Perez",
+    "monto": 150000,
+    "estado": "completado",
+    "fecha": "2025-10-20T00:00:00"
+  }
+  ```
+
+**Tool: `pedidos_crear`**
+
+Create new order with "pendiente" status.
+
+- **Parameters:**
+  - `cliente` (string, required): Customer name
+  - `monto` (number, required): Order amount (must be > 0)
+- **Returns:**
+  ```json
+  {
+    "id": 42,
+    "mensaje": "Pedido creado exitosamente"
+  }
+  ```
+
+### Example Commands
+
+Test the system with these prompts in Claude Desktop:
+
+- "What was the total sales from last month?"
+- "Show me the sales for the last 7 days"
+- "Check the status of order 5"
+- "Create an order for Maria Garcia with amount 250000"
+
+## Database Management
+
+### Connection Details
+
+| Parameter | Value |
+|-----------|-------|
+| Host | localhost |
+| Port | 5432 |
+| Database | mcp_lab |
+| User | postgres |
+| Password | postgres |
+| Connection String | `postgresql://postgres:postgres@localhost:5432/mcp_lab` |
+
+### Database Schema
+
+**ventas (sales) table:**
+```sql
+id          SERIAL PRIMARY KEY
+fecha       DATE NOT NULL
+monto       DECIMAL(10,2) NOT NULL CHECK (monto >= 0)
+descripcion VARCHAR(255)
+created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+```
+
+**pedidos (orders) table:**
+```sql
+id      SERIAL PRIMARY KEY
+cliente VARCHAR(255) NOT NULL
+monto   DECIMAL(10,2) NOT NULL CHECK (monto >= 0)
+estado  VARCHAR(50) NOT NULL DEFAULT 'pendiente'
+fecha   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+```
+
+**Valid order states:** 'pendiente', 'procesando', 'completado', 'cancelado'
+
+### How to Access Databases
+
+**Access psql shell:**
+```bash
+docker exec -it mcp-postgres psql -U postgres -d mcp_lab
+```
+
+**Common psql commands:**
+```sql
+\dt              -- List all tables
+\d ventas        -- Describe ventas table
+\d pedidos       -- Describe pedidos table
+\q               -- Quit psql
+```
+
+**Sample queries:**
+```sql
+-- Check sales data
+SELECT COUNT(*) FROM ventas;
+SELECT fecha, SUM(monto) as total FROM ventas GROUP BY fecha ORDER BY fecha DESC LIMIT 10;
+
+-- Check orders data
+SELECT COUNT(*) FROM pedidos;
+SELECT estado, COUNT(*) as cantidad FROM pedidos GROUP BY estado;
+```
+
+**Backup database:**
+```bash
+docker exec mcp-postgres pg_dump -U postgres mcp_lab > backup_$(date +%Y%m%d_%H%M%S).sql
+```
+
+**Restore from backup:**
+```bash
+docker exec -i mcp-postgres psql -U postgres -d mcp_lab < backup_file.sql
+```
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+**"Gateway disconnected" in Claude Desktop:**
+- Verify absolute path in `claude_desktop_config.json`
+- Check that the path points to `mcp-gateway/dist/index.js`
+- Restart Claude Desktop completely
+- Review gateway logs (stderr output)
+
+**"Database connection failed":**
+- Verify PostgreSQL is running: `docker ps`
+- Check that container `mcp-postgres` is up
+- Review database credentials in `.env` files (both services)
+- Test connection: `docker exec -it mcp-postgres psql -U postgres -d mcp_lab`
+
+**"Module not found" errors:**
+- Node.js service: Run `npm install` in the service directory
+- Python service: Activate venv and run `pip install -r requirements.txt`
+- Verify Node.js version: `node --version` (requires 18+)
+- Verify Python version: `python --version` (requires 3.11+)
+
+**"Backend is not ready":**
+- Test each backend service individually before using gateway
+- Verify database has seed data loaded
+- Check backend paths in gateway `.env` configuration
+- Review stderr logs from each component
+
+**Python venv issues on Windows:**
+- Use `python -m venv venv --copies` instead of `python -m venv venv`
+- Activate with `venv\Scripts\activate` (backslash, not forward slash)
+
+### Port Conflicts
+
+**Port 5432 already in use:**
+
+1. Check if PostgreSQL is running locally:
+   ```bash
+   # Windows
+   netstat -ano | findstr :5432
+
+   # Linux/macOS
+   lsof -i :5432
+   ```
+
+2. Stop local PostgreSQL:
+   ```bash
+   # Windows (run as Administrator)
+   net stop postgresql-x64-15
+
+   # Linux
+   sudo systemctl stop postgresql
+
+   # macOS
+   brew services stop postgresql
+   ```
+
+3. Or change Docker port in `docker-compose.yml`:
+   ```yaml
+   ports:
+     - "5433:5432"  # Use port 5433 instead
+   ```
+   Then update `.env` files to use port 5433.
+
+### Database Connection Problems
+
+**Connection Refused:**
+
+1. Check container is running: `docker-compose ps`
+2. Check container health: `docker inspect mcp-postgres --format='{{.State.Health.Status}}'`
+3. View logs: `docker-compose logs postgres`
+4. Restart container: `docker-compose restart`
+5. Ensure Docker Desktop is running (Windows/macOS)
+
+**Reset Database (nuclear option):**
+
+```bash
+cd db
+docker-compose down -v  # WARNING: Deletes all data!
+docker-compose up -d
+docker exec -i mcp-postgres psql -U postgres -d mcp_lab < schema.sql
+docker exec -i mcp-postgres psql -U postgres -d mcp_lab < seed_data.sql
+```
+
+### Service Registration Issues
+
+**Tools not appearing in Claude Desktop:**
+
+1. Verify gateway shows "connected" status
+2. Restart Claude Desktop completely
+3. Check that backend services can start independently:
+   ```bash
+   # Test Ventas
+   cd mcp-ventas-node
+   node dist/index.js
+   # Press Ctrl+C after seeing it starts
+
+   # Test Pedidos
+   cd mcp-pedidos-py
+   python src/server.py
+   # Press Ctrl+C after seeing it starts
+   ```
+4. Review gateway configuration in `.env`
+
+## Project Structure
 
 ```
 mcp-lab/
@@ -137,51 +469,34 @@ mcp-lab/
 │   ├── schema.sql
 │   ├── seed_data.sql
 │   └── README.md
-├── mcp-ventas-node/       # Servidor Ventas (Node.js/TypeScript)
+├── mcp-ventas-node/       # Ventas Service (Node.js/TypeScript)
 │   ├── src/index.ts
 │   ├── package.json
+│   ├── tsconfig.json
+│   ├── .env.example
 │   └── README.md
-├── mcp-pedidos-py/        # Servidor Pedidos (Python)
+├── mcp-pedidos-py/        # Pedidos Service (Python)
 │   ├── src/server.py
 │   ├── requirements.txt
+│   ├── .env.example
 │   └── README.md
 ├── mcp-gateway/           # Gateway (Node.js/TypeScript)
 │   ├── src/index.ts
 │   ├── package.json
+│   ├── tsconfig.json
+│   ├── .env.example
 │   └── README.md
-└── README.md              # Este archivo
+├── README.md              # This file
+└── TODO.md                # Assignment checklist
 ```
 
-Cada componente tiene su propio README con documentación detallada.
+Each component has its own README with detailed implementation documentation.
 
-## 🐛 Troubleshooting Común
+## Additional Resources
 
-**"Gateway disconnected":**
-- Verificar ruta absoluta en claude_desktop_config.json
-- Revisar logs del gateway (stderr)
-- Confirmar que backends están accesibles
+For more detailed technical information, see individual service documentation:
 
-**"Database connection failed":**
-- Verificar que PostgreSQL está corriendo: `docker ps`
-- Revisar credenciales en archivos .env
-- Ver [db/README.md](db/README.md)
-
-**"Module not found":**
-- Ejecutar `npm install` o `pip install -r requirements.txt`
-- Verificar versiones de Node.js (18+) y Python (3.11+)
-
-**"Backend is not ready":**
-- Probar backends individualmente antes del gateway
-- Verificar que la base de datos tiene datos (seed_data.sql)
-- Revisar logs en stderr de cada componente
-
-**Problemas con venv en Windows:**
-- Usar `python -m venv venv --copies` en lugar de `python -m venv venv`
-- Ver [mcp-pedidos-py/README.md](mcp-pedidos-py/README.md)
-
-## 📚 Documentación Detallada
-
-- [Base de Datos](db/README.md) - Setup Docker, schema, datos de prueba, comandos
-- [Servidor Ventas](mcp-ventas-node/README.md) - Implementación Node.js, herramientas, configuración
-- [Servidor Pedidos](mcp-pedidos-py/README.md) - Implementación Python, herramientas, configuración
-- [Gateway](mcp-gateway/README.md) - Arquitectura, enrutamiento, integración con Claude
+- [db/README.md](db/README.md) - Database setup and Docker operations
+- [mcp-ventas-node/README.md](mcp-ventas-node/README.md) - Node.js service implementation
+- [mcp-pedidos-py/README.md](mcp-pedidos-py/README.md) - Python service implementation
+- [mcp-gateway/README.md](mcp-gateway/README.md) - Gateway architecture details

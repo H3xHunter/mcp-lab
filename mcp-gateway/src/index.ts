@@ -12,12 +12,12 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Load environment variables
-dotenv.config();
-
 // ES module __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load environment variables from the project root
+dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 
 // Logging utility - ALL logs go to stderr
 const log = {
